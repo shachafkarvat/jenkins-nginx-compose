@@ -1,0 +1,47 @@
+version: '3'
+
+# Persistent volumes for Jenkins and Nginx
+volumes:
+  jenkins_home: {}
+  jenkins_logs: {}
+  nginx_logs: {}
+
+networks:
+  jenkins:
+
+services:
+  jenkins:
+    build: ./jenkins
+    container_name: jenkins_master
+    environment:
+      JAVA_OPTS: "-Djava.awt.headless=true"  
+    ports:
+      - "50000:50000"
+      - "8080:8080"
+    expose:
+      - "50000"
+      - "8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - jenkins_logs:/var/log/jenkins
+    networks:
+      - jenkins
+
+  nginx:
+    build: ./nginx
+    image: nginx:proxy
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    expose:
+      - "80"
+    volumes:
+      - "nginx_logs:/var/log/nginx/"
+    networks:
+      - jenkins
+    links:
+      - jenkins:jenkins
+    depends_on:
+      - jenkins
+
